@@ -6,4 +6,4 @@
 *	app/code/community/Aschroder/SMTPPro/
 modules/Aschroder_SMTPPro.xml	app/etc/modules/Aschroder_SMTPPro.xml
 
-locale/zh_CN/Aschroder_SMTPPro.csv      app/locale/zh_CN/Aschroder_SMTPPro.csv 
+locale/zh_CN/Aschroder_SMTPPro.csv      app/locale/zh_CN/Aschroder_SMTPPro.csv
