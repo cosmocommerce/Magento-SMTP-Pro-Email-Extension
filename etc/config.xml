@@ -104,26 +104,26 @@
                 </children>
             </system>
         </menu>
-		<acl>
+		<acl> 
 			<resources>
+				<all>
+					<title>Allow Everything</title>
+				</all>
 				<admin>
 					<children>
+						<Aschroder_SMTPPro>
+							<title>Email Settings</title>
+							<sort_order>10</sort_order>
+						</Aschroder_SMTPPro>
 						<system>
 							<children>
-								<config>
-									<children>
-										<smtppro  translate="title" module="smtppro">
-											<title>SMTP Pro Email Settings</title>
-										</smtppro>
-									</children>
-								</config>
 					            <tools>
 					              <children>
 					                <smtppro  translate="title" module="smtppro">
 					                  <title>Email Log</title>
 					                </smtppro>
 					              </children>
-					            </tools>
+					            </tools> 
 							</children>
 						</system>
 					</children>

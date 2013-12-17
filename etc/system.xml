@@ -1,16 +1,28 @@
 <?xml version="1.0"?>
 <config>
+    <tabs>
+        <cosmocommerce translate="label" module="smtppro">
+            <label>CosmoCommerce.com</label>
+            <sort_order>300</sort_order>
+        </cosmocommerce>
+    </tabs>
 	<sections>
-		<system>
+		<emailsettings>
+            <label>Email Settings</label>
+            <tab>cosmocommerce</tab>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <sort_order>99999</sort_order>
 			<groups>
-				<smtppro translate="label comment" module="smtppro">
+				<smtppro>
 					<label>SMTP Pro Email General Settings</label>
 					<frontend_type>text</frontend_type>
 					<sort_order>995</sort_order>
 					<show_in_default>1</show_in_default>
 					<show_in_website>1</show_in_website>
 					<show_in_store>0</show_in_store>
-					<comment>If you are experiencing problems with this extension please run the self diagnosing test by clicking the button below. The module will log what it is doing if you enable logging, this can be useful to determine problems aswell. If you have any questions or would like any help please visit &lt;a href='http://aschroder.com' target='_blank'&gt;ASchroder.com&lt;/a&gt;.</comment>
+					<comment>配置过程遇到问题请联系我们</comment>
 						<fields>
 							   <option translate="label comment">
 	                                <label>Choose extension option</label>
@@ -184,6 +196,6 @@
                       </fields>
               </sessettings>
 			</groups>
-		</system>
+		</emailsettings>
 	</sections>
 </config>
