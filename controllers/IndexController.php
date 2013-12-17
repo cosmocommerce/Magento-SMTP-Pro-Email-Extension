@@ -28,9 +28,9 @@ class Aschroder_SMTPPro_IndexController
 		$websiteModel = Mage::app()->getWebsite($this->getRequest()->getParam('website'));
 		$this->TEST_EMAIL = Mage::getStoreConfig('trans_email/ident_general/email', $websiteModel->getId());
 
-		$msg = "ASchroder.com SMTP Pro Self-test results";
+		$msg = "邮件自检结果";
 		
-		$msg = $msg . "<br/>Testing outbound connectivity to Server:";
+		$msg = $msg . "<br/>服务器连通性:";
 		Mage::log("Raw connection test....");
 		
 		
@@ -39,19 +39,19 @@ class Aschroder_SMTPPro_IndexController
 		$sesEnabled = Mage::helper('smtppro')->getSES();
 		
 		if($googleapps) {
-			$msg = $msg . "<br/>Using Google Apps/Gmail configuration options";
+			$msg = $msg . "<br/>Google Apps/Gmail 配置项";
 			$host = "smtp.gmail.com";
 			$port = 587;
 		} else if ($smtpEnabled) {
-			$msg = $msg . "<br/>Using SMTP configuration options";
+			$msg = $msg . "<br/>SMTP信息";
 			$host = Mage::getStoreConfig('system/smtpsettings/host', $websiteModel->getId());
 			$port = Mage::getStoreConfig('system/smtpsettings/port', $websiteModel->getId());
 		} else if ($sesEnabled) {
 			// no connectivity test - either disabled or SES...
-			$msg = $msg . "<br/> Connection to Amazon SES server not tested (...yet)";
+			$msg = $msg . "<br/>Amazon SES 服务未测试";
 			Mage::log("skipped, SES.");
 		} else {
-			$msg = $msg . "<br/> extension disabled, cannot test outbound connectivity";
+			$msg = $msg . "<br/> 插件已被禁用";
 			Mage::log("skipped, disabled.");
 		}
 		
@@ -69,10 +69,10 @@ class Aschroder_SMTPPro_IndexController
 	
 			if (!$fp) {
 				$success = false;
-				$msg = $msg . "<br/>Failed to connect to SMTP server. Reason: " . $errstr . "(" . $errno . ")";
-			 	$msg = $msg . "<br/> This extension requires an outbound SMTP connection on port: " . $port;
+				$msg = $msg . "<br/> 连接错误,原因: " . $errstr . "(" . $errno . ")";
+			 	$msg = $msg . "<br/> 端口要求: " . $port;
 			} else {
-				$msg = $msg . "<br/> Connection to Host SMTP server successful.";
+				$msg = $msg . "<br/> 连接成功";
 				fclose($fp);
 			}
 		}
@@ -80,14 +80,11 @@ class Aschroder_SMTPPro_IndexController
 		$to = Mage::getStoreConfig('contacts/email/recipient_email', $websiteModel->getId());
 
 		$mail = new Zend_Mail();
-		$sub = "Test Email From ASchroder.com SMTP Pro Module";
+		$sub = "CosmoShop邮件测试标题";
 		$body = 
-			"Hi,\n\n" .
-			"If you are seeing this email then your " .
-			"SMTP Pro settings are correct! \n\n" .
-			"For more information about this extension and " .
-			"tips for using it please visit ASchroder.com.\n\n" .
-			"Regards,\nAshley";
+			"您好,\n\n" .
+			"如果您看到本邮件,说明系统配置成功  \n\n" .
+			"祝贺,\n CosmoShop";
 
 	        $mail->addTo($to)
 	        	->setFrom($this->TEST_EMAIL)
@@ -97,7 +94,7 @@ class Aschroder_SMTPPro_IndexController
 		if ($dev != "supress") {
 			
 			Mage::log("Actual email sending test....");
-			$msg = $msg . "<br/> Sending test email to your contact form address " . $to . ":";
+			$msg = $msg . "<br/> 发送测试邮件给联系人 " . $to . ":";
 			
 	        try {
 				$transport = Mage::helper('smtppro')->getTransport($websiteModel->getId());
@@ -107,24 +104,24 @@ class Aschroder_SMTPPro_IndexController
 				
 				Mage::dispatchEvent('smtppro_email_after_send',
 				array('to' => $to,
-			 			'template' => "SMTPPro Self Test",
+			 			'template' => "自检测试",
 						'subject' => $sub,
 						'html' => false,
 			 			'email_body' => $body));
 				
-				$msg = $msg . "<br/> Test email was sent successfully.";
+				$msg = $msg . "<br/> 测试邮件发送成功.";
 				Mage::log("Test email was sent successfully");
 				
 				
 	    	} catch (Exception $e) {
 				$success = false;
-				$msg = $msg . "<br/> Unable to send test email. Exception message was: " . $e->getMessage() . "...";
-			 	$msg = $msg . "<br/> Please check and double check your username and password.";
+				$msg = $msg . "<br/> 无法发送邮件,原因: " . $e->getMessage() . "...";
+			 	$msg = $msg . "<br/> 请检查用户名和密码.";
 				Mage::log("Test email was not sent successfully: " . $e->getMessage());
 	    	}
 		} else {
 			Mage::log("Not sending test email - all mails currently supressed");
-			$msg = $msg . "<br/> No test email sent, development mode is set to supress all emails.";
+			$msg = $msg . "<br/> 没有发送任何邮件,因为目前是模拟模式.";
 		}
 		
 		// Now we test that the actual core overrides are occuring as expected.
@@ -137,19 +134,19 @@ class Aschroder_SMTPPro_IndexController
 		
 		// If everything worked as expected, the observer will have set this value to true.
 		if (self::$CONTACTFORM_SENT) {
-			$msg = $msg . "<br/> Contact Form test email used SMTPPro to send correctly.";
+			$msg = $msg . "<br/> 联系邮件已发送.";
 		} else {
 			$success = false;
-			$msg = $msg . "<br/> Contact Form test email did not use SMTPPro to send.";
+			$msg = $msg . "<br/> 联系邮件未发送";
 		}
 		
 		Mage::log("Complete");
 
 		if($success) {
-			$msg = $msg . "<br/> Testing complete, if you are still experiencing difficulties please visit  <a target='_blank' href='http://aschroder.com'>ASchroder.com</a> to contact me.";
+			$msg = $msg . "<br/> 自检完成,如果有疑问请联系我们.";
 			Mage::getSingleton('adminhtml/session')->addSuccess($msg);
 		} else {
-			$msg = $msg . "<br/> Testing failed,  please review the reported problems and if you need further help visit  <a target='_blank' href='http://aschroder.com'>ASchroder.com</a> to contact me.";
+			$msg = $msg . "<br/> 自检完成,如果问题不知道如何解决,请联系我们帮助支持.";
 			Mage::getSingleton('adminhtml/session')->addError($msg);
 		}
  
@@ -159,8 +156,8 @@ class Aschroder_SMTPPro_IndexController
 	private function _sendTestContactFormEmail() {
 		
 		$postObject = new Varien_Object();
-		$postObject->setName("SMTPPro Tester");
-		$postObject->setComment("If you get this email then everything seems to be in order.");
+		$postObject->setName("邮件自检");
+		$postObject->setComment("邮件自检成功");
 		$postObject->setEmail($this->TEST_EMAIL);
 		
 		$mailTemplate = Mage::getModel('core/email_template');
