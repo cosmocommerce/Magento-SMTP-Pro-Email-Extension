@@ -12,30 +12,30 @@
 class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract {
 	
 	public function isEnabled() {
-		return Mage::getStoreConfig('system/smtppro/option') != "disabled";
+		return Mage::getStoreConfig('emailsettings/smtppro/option') != "disabled";
 	}
 	
 	public function isLogEnabled() {
-		return Mage::getStoreConfig('system/smtppro/logenabled');
+		return Mage::getStoreConfig('emailsettings/smtppro/logenabled');
 	}
 
 	public function isReplyToStoreEmail() {
-		return Mage::getStoreConfig('system/smtppro/store_addresses');
+		return Mage::getStoreConfig('emailsettings/smtppro/store_addresses');
 	}
 	
 	public function getDevelopmentMode() {
-		return Mage::getStoreConfig('system/smtppro/development');
+		return Mage::getStoreConfig('emailsettings/smtppro/development');
 	}
 	
 	public function getGoogleApps() {
-		return Mage::getStoreConfig('system/smtppro/option') == "google";
+		return Mage::getStoreConfig('emailsettings/smtppro/option') == "google";
 	}
 	public function getSES() {
-		return Mage::getStoreConfig('system/smtppro/option') == "ses";
+		return Mage::getStoreConfig('emailsettings/smtppro/option') == "ses";
 	}
 	
 	public function getSMTP() {
-		return Mage::getStoreConfig('system/smtppro/option') == "smtp";
+		return Mage::getStoreConfig('emailsettings/smtppro/option') == "smtp";
 	}
 	
 	// Keeping this function for backward compatibility 
@@ -55,12 +55,12 @@ class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract {
 		
 		if($this->getSMTP()){
 			
-			$username = Mage::getStoreConfig('system/smtpsettings/username', $id);
-			$password = Mage::getStoreConfig('system/smtpsettings/password', $id);
-			$host = Mage::getStoreConfig('system/smtpsettings/host', $id);
-			$port = Mage::getStoreConfig('system/smtpsettings/port', $id);
-			$ssl = Mage::getStoreConfig('system/smtpsettings/ssl', $id);
-			$auth = Mage::getStoreConfig('system/smtpsettings/authentication', $id);
+			$username = Mage::getStoreConfig('emailsettings/smtpsettings/username', $id);
+			$password = Mage::getStoreConfig('emailsettings/smtpsettings/password', $id);
+			$host = Mage::getStoreConfig('emailsettings/smtpsettings/host', $id);
+			$port = Mage::getStoreConfig('emailsettings/smtpsettings/port', $id);
+			$ssl = Mage::getStoreConfig('emailsettings/smtpsettings/ssl', $id);
+			$auth = Mage::getStoreConfig('emailsettings/smtpsettings/authentication', $id);
 	
 			Mage::log('Preparing the SMTP Email transport, details are: \n '
 			 . "  username=" . $username . "\n"
@@ -93,7 +93,7 @@ class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract {
 			
 		} else if($this->getGoogleApps()) {
 			
-			$email = explode(",", Mage::getStoreConfig('system/googlesettings/email', $id));
+			$email = explode(",", Mage::getStoreConfig('emailsettings/googlesettings/email', $id));
 
 			// We now allow a load balance of multiple gmail 
 			// accounts to get past the 500/day limit.
@@ -109,7 +109,7 @@ class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract {
 					otherwise your connection will fail");
 			}
 			
-			$password = Mage::getStoreConfig('system/googlesettings/gpassword', $id);
+			$password = Mage::getStoreConfig('emailsettings/googlesettings/gpassword', $id);
 			
 			Mage::log('Preparing the Google Apps/Gmail Email transport, email to send with is: ' . $email);
 			$config = array('ssl' => 'tls', 'port' => 587, 'auth' => 'login', 'username' => $email, 'password' => $password);
@@ -123,8 +123,8 @@ class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract {
 			
 			$transport = new App_Mail_Transport_AmazonSES(
 			    array(
-			        'accessKey' => Mage::getStoreConfig('system/sessettings/aws_access_key', $id),
-			        'privateKey' => Mage::getStoreConfig('system/sessettings/aws_private_key', $id) 
+			        'accessKey' => Mage::getStoreConfig('emailsettings/sessettings/aws_access_key', $id),
+			        'privateKey' => Mage::getStoreConfig('emailsettings/sessettings/aws_private_key', $id) 
 			    )
 			);
 			

@@ -26,6 +26,9 @@ class Aschroder_SMTPPro_IndexController
 		
 		$success = true;
 		$websiteModel = Mage::app()->getWebsite($this->getRequest()->getParam('website'));
+        
+        
+        
 		$this->TEST_EMAIL = Mage::getStoreConfig('trans_email/ident_general/email', $websiteModel->getId());
 
 		$msg = "邮件自检结果";
@@ -44,8 +47,8 @@ class Aschroder_SMTPPro_IndexController
 			$port = 587;
 		} else if ($smtpEnabled) {
 			$msg = $msg . "<br/>SMTP信息";
-			$host = Mage::getStoreConfig('system/smtpsettings/host', $websiteModel->getId());
-			$port = Mage::getStoreConfig('system/smtpsettings/port', $websiteModel->getId());
+			$host = Mage::getStoreConfig('emailsettings/smtpsettings/host', $websiteModel->getId());
+			$port = Mage::getStoreConfig('emailsettings/smtpsettings/port', $websiteModel->getId());
 		} else if ($sesEnabled) {
 			// no connectivity test - either disabled or SES...
 			$msg = $msg . "<br/>Amazon SES 服务未测试";
@@ -63,10 +66,13 @@ class Aschroder_SMTPPro_IndexController
 				$fp = fsockopen($host, $port, $errno, $errstr, 15);
 			} catch ( Exception $e) {
 				// An error will be reported below.
+                print_r($e);
+                exit();
 			}
 	
 			Mage::log("Complete");
-	
+            
+    
 			if (!$fp) {
 				$success = false;
 				$msg = $msg . "<br/> 连接错误,原因: " . $errstr . "(" . $errno . ")";
