@@ -5,148 +5,168 @@
  *
  *
  * @author Ashley Schroder (aschroder.com)
- * @copyright  Copyright (c) 2010 Ashley Schroder
+ * @copyright  Copyright (c) 2014 Ashley Schroder
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract {
-	
-	public function isEnabled() {
-		return Mage::getStoreConfig('emailsettings/smtppro/option') != "disabled";
-	}
-	
-	public function isLogEnabled() {
-		return Mage::getStoreConfig('emailsettings/smtppro/logenabled');
-	}
+class Aschroder_SMTPPro_Helper_Data extends Mage_Core_Helper_Abstract
+{
 
-	public function isReplyToStoreEmail() {
-		return Mage::getStoreConfig('emailsettings/smtppro/store_addresses');
-	}
-	
-	public function getDevelopmentMode() {
-		return Mage::getStoreConfig('emailsettings/smtppro/development');
-	}
-	
-	public function getGoogleApps() {
-		return Mage::getStoreConfig('emailsettings/smtppro/option') == "google";
-	}
-	public function getSES() {
-		return Mage::getStoreConfig('emailsettings/smtppro/option') == "ses";
-	}
-	
-	public function getSMTP() {
-		return Mage::getStoreConfig('emailsettings/smtppro/option') == "smtp";
-	}
-	
-	// Keeping this function for backward compatibility 
-	// It will be dropped eventually so call getTransport() from now on!
-	public function getSMTPProTransport($id = null) {
-		return $this->getTransport($id);
-	}
-	
-	// Keeping this function for backward compatibility 
-	// It will be dropped eventually so call getTransport() from now on!
-	public function getGoogleAppsEmailTransport($id = null) {
-		return $this->getTransport($id);
-	}
-	
-	public function getTransport($id = null) {
-		
-		
-		if($this->getSMTP()){
-			
-			$username = Mage::getStoreConfig('emailsettings/smtpsettings/username', $id);
-			$password = Mage::getStoreConfig('emailsettings/smtpsettings/password', $id);
-			$host = Mage::getStoreConfig('emailsettings/smtpsettings/host', $id);
-			$port = Mage::getStoreConfig('emailsettings/smtpsettings/port', $id);
-			$ssl = Mage::getStoreConfig('emailsettings/smtpsettings/ssl', $id);
-			$auth = Mage::getStoreConfig('emailsettings/smtpsettings/authentication', $id);
-	
-			Mage::log('Preparing the SMTP Email transport, details are: \n '
-			 . "  username=" . $username . "\n"
-			 . "  password=" . "MASKED"  /*. $password  */ . "\n" 
-			 . "  host=" . $host . "\n"
-			 . "  port=" . $port . "\n"
-			 . "  ssl=" . $ssl . "\n"
-			 . "  auth=" . $auth . "\n"
-			 );
-			 
-			 // Set up the config array
-			 
-			 $config = array();
-			 
-			 if ($auth != "none") {
-					$config['auth'] = $auth;
-					$config['username'] = $username;
-	                $config['password'] = $password;
-			 }
-			 
-			 if ($port) {
-					$config['port'] = $port;
-			 }
-			 
-			 if ($ssl != "none" ) {
-					$config['ssl'] = $ssl;
-			 }
-			
-			$transport = new Zend_Mail_Transport_Smtp($host, $config);
-			
-		} else if($this->getGoogleApps()) {
-			
-			$email = explode(",", Mage::getStoreConfig('emailsettings/googlesettings/email', $id));
+    const LOG_FILE = 'aschroder_smtppro.log';
 
-			// We now allow a load balance of multiple gmail 
-			// accounts to get past the 500/day limit.
-			
-			if (count($email)) {
-				
-				$email = $email[array_rand($email)];
-			} else {
-				
-				Mage::log(
-					"No email configured - 
-					you need to specify one in the magento configuration, 
-					otherwise your connection will fail");
-			}
-			
-			$password = Mage::getStoreConfig('emailsettings/googlesettings/gpassword', $id);
-			
-			Mage::log('Preparing the Google Apps/Gmail Email transport, email to send with is: ' . $email);
-			$config = array('ssl' => 'tls', 'port' => 587, 'auth' => 'login', 'username' => $email, 'password' => $password);
-			$transport = new Zend_Mail_Transport_Smtp('smtp.gmail.com', $config);
+    public function getTransport($storeId = null)
+    {
 
-		} else if($this->getSES()) {
-			
-			// Big thanks to Christopher Valles
-			// https://github.com/christophervalles/Amazon-SES-Zend-Mail-Transport
-			include_once Mage::getBaseDir() . '/app/code/community/Aschroder/SMTPPro/lib/AmazonSES.php';
-			
-			$transport = new App_Mail_Transport_AmazonSES(
-			    array(
-			        'accessKey' => Mage::getStoreConfig('emailsettings/sessettings/aws_access_key', $id),
-			        'privateKey' => Mage::getStoreConfig('emailsettings/sessettings/aws_private_key', $id) 
-			    )
-			);
-			
-		} else {
-			Mage::log("Disabled, or no matching transport");
-			return null;
-		}
-		
-		Mage::log("Returning transport");
-		
-		return $transport;
-	}
-	
-    public function log($to, $template, $subject, $email, $isHtml) {
-    	
-        $log = Mage::getModel('smtppro/email_log')
-            ->setEmailTo($to)
-            ->setTemplate($template)
-            ->setSubject($subject)
-            ->setEmailBody($isHtml?$email:nl2br($email))
-            ->save();
+        $option = Mage::getStoreConfig('smtppro/general/option', $storeId);
+        return Mage::getModel("smtppro/transports_$option")->getTransport($storeId);
+    }
+
+
+    public function log($m)
+    {
+        if ($this->isDebugLoggingEnabled()) {
+            Mage::log($m, null, self::LOG_FILE);
+        }
+    }
+
+    public function logEmailSent($to, $template, $subject, $email, $isHtml)
+    {
+        if ($this->isLogEnabled()) {
+            $log = Mage::getModel('smtppro/email_log')
+                ->setEmailTo($to)
+                ->setTemplate($template)
+                ->setSubject($subject)
+                ->setEmailBody($isHtml ? $email : nl2br($email))
+                ->save();
+        }
         return $this;
     }
-	
+
+    // General config
+    public function isEnabled($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/option', $storeId) != "disabled";
+    }
+
+    public function isGoogleAppsEnabled($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/option', $storeId) == "google";
+    }
+
+    public function isAmazonSESEnabled($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/option', $storeId) == "ses";
+    }
+
+    public function isSMTPEnabled($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/option', $storeId) == "smtp";
+    }
+
+    public function isSendGridEnabled($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/option', $storeId) == "sendgrid";
+    }
+
+
+    // logging config
+    public function isLogCleaningEnabled($storeId = null)
+    {
+        return Mage::getStoreConfigFlag('smtppro/debug/cleanlog', $storeId);
+    }
+
+    public function getLogLifetimeDays($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/debug/cleanlog_after_days', $storeId);
+    }
+
+    public function isLogEnabled($storeId = null)
+    {
+        return Mage::getStoreConfigFlag('smtppro/debug/logenabled', $storeId);
+    }
+
+    public function isDebugLoggingEnabled($storeId = null)
+    {
+        return Mage::getStoreConfigFlag('smtppro/debug/log_debug', $storeId);
+    }
+
+    // transport config
+    public function getAmazonSESAccessKey($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/ses_access_key', $storeId);
+    }
+
+    public function getAmazonSESPrivateKey($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/ses_private_key', $storeId);
+    }
+
+    public function getGoogleAppsEmail($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/googleapps_email', $storeId);
+    }
+
+    public function getGoogleAppsPassword($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/googleapps_gpassword', $storeId);
+    }
+
+
+    public function getSendGridEmail($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/sendgrid_email', $storeId);
+    }
+
+    public function getSendGridPassword($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/sendgrid_password', $storeId);
+    }
+
+    public function getSMTPSettingsHost($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/smtp_host', $storeId);
+    }
+
+    public function getSMTPSettingsPort($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/smtp_port', $storeId);
+    }
+
+    public function getSMTPSettingsUsername($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/smtp_username', $storeId);
+    }
+
+    public function getSMTPSettingsPassword($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/smtp_password', $storeId);
+    }
+
+    public function getSMTPSettingsSSL($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/smtp_ssl', $storeId);
+    }
+
+    public function getSMTPSettingsAuthentication($storeId = null)
+    {
+        return Mage::getStoreConfig('smtppro/general/smtp_authentication', $storeId);
+    }
+
+
+    // These are not the droids you're looking for...
+
+    // Keeping this function for backward compatibility
+    // It will be dropped eventually so call getTransport() from now on!
+    public function getSMTPProTransport($id = null)
+    {
+        return $this->getTransport($id);
+    }
+
+    // Keeping this function for backward compatibility
+    // It will be dropped eventually so call getTransport() from now on!
+    public function getGoogleAppsEmailTransport($id = null)
+    {
+        return $this->getTransport($id);
+    }
+
 }

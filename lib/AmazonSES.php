@@ -86,7 +86,6 @@ class App_Mail_Transport_AmazonSES extends Zend_Mail_Transport_Abstract
             'Date' => $date,
             'X-Amzn-Authorization' => $this->_buildAuthKey($date)
         ));
-        $client->setEncType('application/x-www-form-urlencoded');
         
         //Build the parameters
         $params = array(
@@ -97,10 +96,11 @@ class App_Mail_Transport_AmazonSES extends Zend_Mail_Transport_Abstract
         
         $recipients = explode(',', $this->recipients);
         while(list($index, $recipient) = each($recipients)){
-            $params[sprintf('Destination.ToAddresses.member.%d', $index + 1)] = $recipient;
+            $params[sprintf('Destinations.member.%d', $index + 1)] = $recipient;
         }
         
         $client->resetParameters();
+        $client->setEncType(Zend_Http_Client::ENC_URLENCODED);
         $client->setParameterPost($params);
         $response = $client->request(Zend_Http_Client::POST);
         
